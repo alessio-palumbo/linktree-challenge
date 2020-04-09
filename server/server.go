@@ -19,7 +19,7 @@ func New(g handlers.Group) http.Handler {
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if r.URL.Path == "/healthcheck" {
 			var ok bool
-			if err := g.DB.QueryRowContext(r.Context(), "SELECT true").Scan(&ok); err != nil {
+			if err := g.DB.QueryRowContext(r.Context(), "SELECT true as ok").Scan(&ok); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, "Error: ", err)
 			}
