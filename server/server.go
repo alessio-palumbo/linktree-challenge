@@ -10,12 +10,17 @@ import (
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 )
 
+type contextKey string
+
+// RequestUserID is the authenticated user of the request
+const RequestUserID contextKey = "request_user_id"
+
 // New returns a handler to serve the links api.
 func New(g handlers.Group) http.Handler {
 	// Add middleware classic package with recover and logging
 	n := negroni.Classic()
 
-	// // Add endpoint to check db connection
+	// Add endpoint to check db connection
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if r.URL.Path == "/healthcheck" {
 			var ok bool
@@ -30,7 +35,8 @@ func New(g handlers.Group) http.Handler {
 		next(w, r)
 	})
 
-	// TODO Register auth middleware
+	// Add authentication to middleware chain
+	n.Use(g.Auth)
 
 	// Add multiplexer and register routes
 	router := mux.NewRouter()

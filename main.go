@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
+	"github.com/alessio-palumbo/linktree-challenge/middleware"
 	"github.com/alessio-palumbo/linktree-challenge/server"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/stdlib"
@@ -39,9 +40,9 @@ func main() {
 	pool.SetMaxIdleConns(10)
 	pool.SetMaxOpenConns(10)
 
-	// TODO Add Auth Client
 	g := handlers.Group{
-		DB: pool,
+		DB:   pool,
+		Auth: middleware.NewAuth(pool),
 	}
 
 	// Start server

@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"database/sql"
-	"net/http"
+
+	"github.com/alessio-palumbo/linktree-challenge/middleware"
 )
 
 // Group injects DB pool and Auth client in handler
 type Group struct {
-	Auth http.Client
+	Auth middleware.Auth
 	DB   *sql.DB
 }
