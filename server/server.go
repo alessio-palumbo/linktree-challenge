@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 
+	e "github.com/alessio-palumbo/linktree-challenge/errors"
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 )
 
@@ -24,11 +25,13 @@ func New(g handlers.Group) http.Handler {
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if r.URL.Path == "/healthcheck" {
 			var ok bool
-			if err := g.DB.QueryRowContext(r.Context(), "SELECT true as ok").Scan(&ok); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, "Error: ", err)
+			err := g.DB.QueryRowContext(r.Context(), "SELECT true as ok").Scan(&ok)
+			switch err {
+			case nil:
+				fmt.Fprint(w, "OK")
+			default:
+				e.WriteError(w, http.StatusInternalServerError, err)
 			}
-			fmt.Fprint(w, "OK")
 			return
 		}
 

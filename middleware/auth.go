@@ -3,9 +3,10 @@ package middleware
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
+
+	e "github.com/alessio-palumbo/linktree-challenge/errors"
 )
 
 type contextKey string
@@ -17,8 +18,8 @@ const (
 	bearerPrefix = "Bearer "
 	authHeader   = "Authorization"
 
-	ErrTokenMissing = "Missing token in request headers"
-	ErrTokenInvalid = "Request token is invalid"
+	errTokenMissing = "missing token in request headers"
+	errTokenInvalid = "request token is invalid"
 )
 
 type Auth struct {
@@ -35,9 +36,7 @@ func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handle
 	token := a.requestToken(r)
 
 	if token == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprint(w, "Error: ", ErrTokenMissing)
-		// Exit middleware chain
+		e.WriteError(w, http.StatusUnauthorized, errTokenMissing)
 		return
 	}
 
@@ -46,11 +45,9 @@ func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handle
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprint(w, "Error: ", ErrTokenMissing)
+			e.WriteError(w, http.StatusUnauthorized, errTokenInvalid)
 		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "Error: ", err)
+			e.WriteError(w, http.StatusInternalServerError, err)
 		}
 		return
 	}
