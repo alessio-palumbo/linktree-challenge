@@ -32,6 +32,8 @@ func NewAuth(db *sql.DB) Auth {
 }
 
 // ServeHTTP implements the negroni.Handler interface
+// TODO this could be using a jwt token containing the userID and any other data needed,
+// while using the db tokens table to check the expiry timestamp.
 func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	token := a.requestToken(r)
 
@@ -51,7 +53,6 @@ func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handle
 		}
 		return
 	}
-
 	r = r.WithContext(context.WithValue(ctx, RequestUserID, userID))
 
 	next(w, r)
