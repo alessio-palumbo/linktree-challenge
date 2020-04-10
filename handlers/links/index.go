@@ -34,6 +34,7 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID string) ([]models.Link
 		       l.type,
 		       l.title,
 		       l.url,
+		       l.thumbnail,
 		       l.created_at,
 
 		       sl.id,
