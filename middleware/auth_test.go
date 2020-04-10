@@ -86,10 +86,7 @@ func TestAuth_ServeHTTP(t *testing.T) {
 
 			var requestUserID string
 			NewAuth(db).ServeHTTP(recorder, req, func(w http.ResponseWriter, r *http.Request) {
-				v := r.Context().Value(RequestUserID)
-				if v != nil {
-					requestUserID = v.(string)
-				}
+				requestUserID = CtxReqUserID(r.Context())
 			})
 
 			if got := recorder.Code; got != tc.wantStatus {
