@@ -7,30 +7,39 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 
+	e "github.com/alessio-palumbo/linktree-challenge/errors"
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 )
+
+type contextKey string
+
+// RequestUserID is the authenticated user of the request
+const RequestUserID contextKey = "request_user_id"
 
 // New returns a handler to serve the links api.
 func New(g handlers.Group) http.Handler {
 	// Add middleware classic package with recover and logging
 	n := negroni.Classic()
 
-	// // Add endpoint to check db connection
+	// Add endpoint to check db connection
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if r.URL.Path == "/healthcheck" {
 			var ok bool
-			if err := g.DB.QueryRowContext(r.Context(), "SELECT true as ok").Scan(&ok); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, "Error: ", err)
+			err := g.DB.QueryRowContext(r.Context(), "SELECT true as ok").Scan(&ok)
+			switch err {
+			case nil:
+				fmt.Fprint(w, "OK")
+			default:
+				e.WriteError(w, http.StatusInternalServerError, err)
 			}
-			fmt.Fprint(w, "OK")
 			return
 		}
 
 		next(w, r)
 	})
 
-	// TODO Register auth middleware
+	// Add authentication to middleware chain
+	n.Use(g.Auth)
 
 	// Add multiplexer and register routes
 	router := mux.NewRouter()
