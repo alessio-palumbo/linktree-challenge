@@ -49,7 +49,7 @@ func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handle
 		return
 	}
 
-	r = setRequestCtx(ctx, r, requestUserID, userID)
+	r = CtxSetUserID(ctx, r, userID)
 
 	next(w, r)
 }

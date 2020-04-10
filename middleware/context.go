@@ -17,6 +17,11 @@ func contextValue(ctx context.Context, key interface{}) interface{} {
 	return ctx.Value(key)
 }
 
+// CtxSetUserID sets the requestUserID in the context
+func CtxSetUserID(ctx context.Context, r *http.Request, v string) *http.Request {
+	return setRequestCtx(ctx, r, requestUserID, v)
+}
+
 // CtxReqUserID retrieves the authenticated userID
 func CtxReqUserID(ctx context.Context) string {
 	if v := contextValue(ctx, requestUserID); v != nil {
