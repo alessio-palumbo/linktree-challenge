@@ -1,30 +1,49 @@
 package models
 
+import (
+	"encoding/json"
+	"time"
+)
+
 type linkType string
 
 const (
+	// LinkClassic is a standard link with title and url
 	LinkClassic linkType = "classic"
-	LinkMusic   linkType = "music"
-	LinkShows   linkType = "shows"
+	// LinkMusic is a link to a song record. It allows to specify
+	// multiple sublinks with a link to each platform
+	LinkMusic linkType = "music"
+	// LinkShows represent a list with links to multiple shows
+	LinkShows linkType = "shows"
 )
 
 // Link is the base model for a link that can contain a list
 // of sublinks associated with its type
 type Link struct {
-	ID       string
-	UserID   string
-	Type     linkType
-	Title    *string
-	URL      *string
-	SubLinks []interface{}
+	ID        string
+	UserID    string
+	Type      linkType
+	Title     *string
+	URL       *string
+	Thumbnail *string
+	CreatedAt time.Time
+	SubLinks  []interface{}
 }
 
-type linkStatus string
+// Sublink contains the metadata of a sublink
+type Sublink struct {
+	ID       string
+	UserID   string
+	Metadata json.RawMessage
+}
 
+type showStatus string
+
+// The status a given show can be set to
 const (
-	StatusOnSale    linkStatus = "on-sale"
-	StatusNotOnSale linkStatus = "not-on-sale"
-	StatusSoldOut   linkStatus = "sold-out"
+	StatusOnSale    showStatus = "on-sale"
+	StatusNotOnSale showStatus = "not-on-sale"
+	StatusSoldOut   showStatus = "sold-out"
 )
 
 // Show is a sublink containing information about a single show
@@ -34,7 +53,7 @@ type Show struct {
 	Name     string
 	Venue    string
 	Location string
-	Status   linkStatus
+	Status   showStatus
 }
 
 // Platform is a sublink representing a song's streaming platform and its url
