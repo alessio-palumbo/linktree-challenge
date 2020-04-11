@@ -151,8 +151,8 @@ func populateMockDB(mock sqlmock.Sqlmock) {
 			nil,
 			time.Now().UTC().Add(-8 * time.Hour),
 			"fb4ea9a5-8446-4201-a20b-818c944e3e09",
-			[]byte(`{"id":"bff093b1-1857-4b74-94f1-d75fe8b44d41","date":"Apr 01 2019",
-			"venue":"Princess Theatre","location":"Melbourne","status":"sold-out"}`),
+			[]byte(`{"id":"bff093b1-1857-4b74-94f1-d75fe8b44d41","date":"Sep 03 2020",
+			"venue":"Opera House","location":"Sydney","status":"on-sale"}`),
 		},
 		[]driver.Value{
 			"b626168a-6c34-44cb-bf94-667c76235a26",

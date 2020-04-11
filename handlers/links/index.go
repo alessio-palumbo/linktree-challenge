@@ -51,26 +51,55 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID string) ([]models.Link
 	defer rows.Close()
 
 	links := []models.Link{}
-
 	for rows.Next() {
-		var l models.Link
-		var sl models.Sublink
+		var (
+			l        models.Link
+			subID    *string
+			metadata *json.RawMessage
+		)
 
 		err := rows.Scan(&l.ID, &l.Type, &l.Title, &l.URL,
-			&l.CreatedAt, &sl.ID, &sl.Metadata)
+			&l.Thumbnail, &l.CreatedAt, &subID, &metadata)
 		if err != nil {
 			return nil, err
 		}
 
-		switch l.Type {
-		case models.LinkMusic:
-			// TODO
-		case models.LinkShows:
-			// TODO
+		if subID != nil {
+			err := addSublink(&l, subID, metadata)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		links = append(links, l)
 	}
 
 	return links, rows.Err()
+}
+
+func addSublink(l *models.Link, subID *string, metadata *json.RawMessage) error {
+
+	// TODO this could be improved to reduce code duplication using reflection
+	switch l.Type {
+	case models.LinkMusic:
+		sb := models.Platform{ID: *subID}
+		if metadata != nil {
+			err := json.Unmarshal(*metadata, &sb)
+			if err != nil {
+				return err
+			}
+		}
+		l.SubLinks = append(l.SubLinks, sb)
+	case models.LinkShows:
+		sb := models.Show{ID: *subID}
+		if metadata != nil {
+			err := json.Unmarshal(*metadata, &sb)
+			if err != nil {
+				return err
+			}
+		}
+		l.SubLinks = append(l.SubLinks, sb)
+	}
+
+	return nil
 }
