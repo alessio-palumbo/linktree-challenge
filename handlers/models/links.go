@@ -20,14 +20,14 @@ const (
 // Link is the base model for a link that can contain a list
 // of sublinks associated with its type
 type Link struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"-"`
-	Type      linkType  `json:"type"`
-	Title     *string   `json:"title"`
-	URL       *string   `json:"url"`
-	Thumbnail *string   `json:"thumbnail,omitempty"`
-	CreatedAt time.Time `json:"-"`
-	SubLinks  []interface{}
+	ID        string        `json:"id"`
+	UserID    string        `json:"-"`
+	Type      linkType      `json:"type" validate:"required,oneof=classic music shows"`
+	Title     *string       `json:"title" validate:"omitempty,max=144"`
+	URL       *string       `json:"url" validate:"omitempty,max=500"`
+	Thumbnail *string       `json:"thumbnail,omitempty" validate:"omitempty,max=144"`
+	CreatedAt time.Time     `json:"-"`
+	SubLinks  []interface{} `json:"-" validate:"dive"`
 }
 
 // Sublink contains the metadata of a sublink
