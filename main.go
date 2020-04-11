@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/stdlib"
+
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 	"github.com/alessio-palumbo/linktree-challenge/middleware"
 	"github.com/alessio-palumbo/linktree-challenge/server"
-	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/stdlib"
+	"github.com/alessio-palumbo/linktree-challenge/validator"
 )
 
 var (
@@ -41,8 +43,9 @@ func main() {
 	pool.SetMaxOpenConns(10)
 
 	g := handlers.Group{
-		DB:   pool,
-		Auth: middleware.NewAuth(pool),
+		DB:        pool,
+		Auth:      middleware.NewAuth(pool),
+		Validator: validator.New(),
 	}
 
 	// Start server
