@@ -2,21 +2,22 @@ package links
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 	"github.com/alessio-palumbo/linktree-challenge/middleware"
-
-	"github.com/DATA-DOG/go-sqlmock"
 )
 
 var (
 	user1ID = "fac90185-d243-46f5-8797-e57ac9c2c293"
 	user2ID = "9bce575b-1507-4a0f-a523-4072a72fc968"
 	user3ID = "8c4664f7-ef96-48a1-80e3-804bbe0af06a"
+	user4ID = "5bb13e12-3f40-42f0-be31-4a7ca007b432"
 )
 
 func TestIndexHandler_ServeHTTP(t *testing.T) {
@@ -31,6 +32,7 @@ func TestIndexHandler_ServeHTTP(t *testing.T) {
 	var testCases = []struct {
 		name       string
 		userID     string
+		sortBy     string
 		wantStatus int
 		wantBody   *string
 	}{
@@ -49,11 +51,22 @@ func TestIndexHandler_ServeHTTP(t *testing.T) {
 			userID:     user3ID,
 			wantStatus: http.StatusOK,
 		},
+		{
+			name:       "Ordered request",
+			userID:     user4ID,
+			sortBy:     "created_at:asc",
+			wantStatus: http.StatusOK,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "https://linktree.com/api/links", nil)
+			url := "https://linktree.com/api/links"
+			if tc.sortBy != "" {
+				url += fmt.Sprintf("?sort_by=%s", tc.sortBy)
+			}
+
+			req := httptest.NewRequest("GET", url, nil)
 			req = middleware.CtxSetUserID(req.Context(), req, tc.userID)
 
 			recorder := httptest.NewRecorder()
@@ -183,4 +196,89 @@ func populateMockDB(mock sqlmock.Sqlmock) {
 
 	mock.ExpectQuery("SELECT l.id").WithArgs(user3ID).WillReturnRows(user3Rows)
 
+	// Set user4 mock DB. Only classic links
+	user4Data := [][]driver.Value{
+		[]driver.Value{
+			"a238c29f-d033-48a8-a20f-49c2756d25c4",
+			"classic",
+			"First Link",
+			"http://firstlink.com/1",
+			nil,
+			time.Now().UTC().Add(-24 * time.Hour),
+			nil,
+			nil,
+		},
+		[]driver.Value{
+			"a3c32ec1-54e0-4df4-b5f0-0be37b0a5b57",
+			"classic",
+			"Second Link",
+			"http://secondlink.com/2",
+			nil,
+			time.Now().UTC().Add(-21 * time.Hour),
+			nil,
+			nil,
+		},
+	}
+
+	user4Rows := sqlmock.NewRows(fields)
+	for _, row := range user4Data {
+		user1Rows.AddRow(row...)
+	}
+
+	mock.ExpectQuery("SELECT l.id").WithArgs(user4ID).WillReturnRows(user4Rows)
+}
+
+func Test_sortByClause(t *testing.T) {
+
+	tests := []struct {
+		name   string
+		sortBy string
+		want   string
+	}{
+		{
+			name: "Empty string",
+		},
+		{
+			name:   "Single column, no order",
+			sortBy: "created_at",
+			want:   "created_at asc",
+		},
+		{
+			name:   "Single column, with order",
+			sortBy: "created_at:asc",
+			want:   "created_at asc",
+		},
+		{
+			name:   "Single unknown column",
+			sortBy: "order_id",
+			want:   "",
+		},
+		{
+			name:   "Single column, unknown order",
+			sortBy: "created_at:descending",
+			want:   "created_at asc",
+		},
+		{
+			name:   "Multiple column, with order",
+			sortBy: "created_at:desc,title:desc",
+			want:   "created_at desc, title desc",
+		},
+		{
+			name:   "Multiple column, no order",
+			sortBy: "created_at,type",
+			want:   "created_at asc, type asc",
+		},
+		{
+			name:   "Invalid multiple column, with order",
+			sortBy: "created_at:descending,order:asc",
+			want:   "created_at asc",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sortByClause(tt.sortBy); got != tt.want {
+				t.Errorf("sortByClause() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

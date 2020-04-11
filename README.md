@@ -133,7 +133,7 @@ The Api assumes it can fetch the userID of the request from the authentication m
 
 * GET /api/links
     * Query params
-        * order_by: created_at (optional, default to positionID)
+        * order_by: created_at:asc,title:desc,type (optional, accepts multiple columns. TODO default to positionID)
     * Responses:
         * 200 OK
             ```

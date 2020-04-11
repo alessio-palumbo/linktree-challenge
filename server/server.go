@@ -9,6 +9,7 @@ import (
 
 	e "github.com/alessio-palumbo/linktree-challenge/errors"
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
+	"github.com/alessio-palumbo/linktree-challenge/handlers/links"
 )
 
 // New returns a handler to serve the links api.
@@ -43,7 +44,7 @@ func New(g handlers.Group) http.Handler {
 		PathPrefix("/api/links").
 		Subrouter()
 
-	linksSB.Handle("", nil).Methods("GET")
+	linksSB.Handle("", links.IndexHandler(g)).Methods("GET")
 	linksSB.Handle("/{link_id}", nil).Methods("GET")
 	linksSB.Handle("", nil).Methods("POST")
 	linksSB.Handle("/{link_id}", nil).Methods("PUT")
