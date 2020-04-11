@@ -9,11 +9,6 @@ import (
 	e "github.com/alessio-palumbo/linktree-challenge/errors"
 )
 
-type contextKey string
-
-// RequestUserID is the authenticated user of the request
-const RequestUserID contextKey = "request_user_id"
-
 const (
 	bearerPrefix = "Bearer "
 	authHeader   = "Authorization"
@@ -53,7 +48,8 @@ func (a Auth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handle
 		}
 		return
 	}
-	r = r.WithContext(context.WithValue(ctx, RequestUserID, userID))
+
+	r = CtxSetUserID(ctx, r, userID)
 
 	next(w, r)
 }
