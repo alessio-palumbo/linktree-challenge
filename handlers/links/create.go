@@ -35,6 +35,7 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err = h.insertLinks(r.Context(), link, sublinks)
 	if err != nil {
 		e.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	handlers.WriteResponse(w, http.StatusCreated, *link)

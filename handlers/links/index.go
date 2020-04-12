@@ -33,6 +33,7 @@ func (h IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	links, err := getUserLinks(ctx, h.DB, userID, r.FormValue("sort_by"))
 	if err != nil {
 		e.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	handlers.WriteResponse(w, http.StatusOK, links)
