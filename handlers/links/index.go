@@ -80,7 +80,7 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]mod
 		}
 
 		if subID != nil {
-			err := addSublink(&l, subID, metadata)
+			err := addSublink(&l, *subID, metadata)
 			if err != nil {
 				return nil, err
 			}
@@ -114,12 +114,12 @@ func sortByClause(sortBy string) string {
 	return strings.Join(sortClauses, ", ")
 }
 
-func addSublink(l *models.Link, subID *string, metadata *json.RawMessage) error {
+func addSublink(l *models.Link, subID string, metadata *json.RawMessage) error {
 
 	// TODO this could be improved to reduce code duplication using reflection
 	switch l.Type {
 	case models.LinkMusic:
-		sb := models.Platform{ID: *subID}
+		sb := models.Platform{ID: subID}
 		if metadata != nil {
 			err := json.Unmarshal(*metadata, &sb)
 			if err != nil {
@@ -128,7 +128,7 @@ func addSublink(l *models.Link, subID *string, metadata *json.RawMessage) error 
 		}
 		l.SubLinks = append(l.SubLinks, sb)
 	case models.LinkShows:
-		sb := models.Show{ID: *subID}
+		sb := models.Show{ID: subID}
 		if metadata != nil {
 			err := json.Unmarshal(*metadata, &sb)
 			if err != nil {
