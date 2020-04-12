@@ -36,14 +36,14 @@
     * title VARCHAR(144) default NULL
     * url VARCHAR(500) default NULL -- TODO could use shortened urls
     * thumbnail VARCHAR(144) default NULL -- assuming is shortened and stored in an s3 bucket
-    * created_at TIMESTAMPTZ DEFALT CURRENT_TIMESTAMP
+    * created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     * TODO if needed an update_at timestamp could be added
     * TODO for the sake of ordering we could have an order_id field
 
 * sublinks:
     * id UUID NOT NULL (PK)
     * link_id UUID NOT NULL (FK)
-    * metadata JSONB NULL
+    * metadata JSONB NOT NULL
 
 ### Models
 

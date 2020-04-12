@@ -22,14 +22,29 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var l models.LinkPayload
-	err = json.Unmarshal(body, &l)
-	if err := e.CheckValid(err, l, h.Validator); err != nil {
+	link, err := prepareDbObject(body, h.Validator)
+	if err != nil {
 		e.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	link := models.Link{
+	// err = h.insertLinks(r.Context(), link)
+	// if err != nil {
+	// 	e.WriteError(w, http.StatusInternalServerError, err)
+	// }
+
+	json.NewEncoder(w).Encode(*link)
+}
+
+func prepareDbObject(body []byte, validator *validator.CustomValidator) (*models.Link, error) {
+
+	var l models.LinkPayload
+	err := json.Unmarshal(body, &l)
+	if err := e.CheckValid(err, l, validator); err != nil {
+		return nil, err
+	}
+
+	link := &models.Link{
 		Type:      l.Type,
 		Title:     l.Title,
 		Thumbnail: l.Thumbnail,
@@ -37,65 +52,24 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(l.SubLinks) > 0 {
-		sublinks, err := subLinks(&l, h.Validator)
-		if err != nil {
-			e.WriteError(w, http.StatusBadRequest, err)
-			return
-		}
+		dbSubs := make([]models.Sublink, 0, len(l.SubLinks))
 
-		for _, s := range sublinks {
-			addSublink(&link, "", &s.Metadata)
-		}
-	}
-
-	// links, err := getUserLinks(ctx, h.DB, userID, r.FormValue("sort_by"))
-	// if err != nil {
-	// 	e.WriteError(w, http.StatusInternalServerError, err)
-	// }
-
-	json.NewEncoder(w).Encode(link)
-}
-
-// subLinks validates data by unmarshalling it into the correct model and run
-// validator before building the json that will form the DB object
-// Note: If the sublink payload matches any, but not all the fields of the model, the matching fields
-// 	 will still be parsed and the sublink considered correct, as long as it satisfy field validation
-// TODO this could be used by a PUT call so change it to exported type in a shared folder
-func subLinks(l *models.LinkPayload, validator *validator.CustomValidator) ([]models.Sublink, error) {
-	sublinks := make([]models.Sublink, 0, len(l.SubLinks))
-	var err error
-
-	for _, sub := range l.SubLinks {
-		var subDB models.Sublink
-		var data json.RawMessage
-
-		switch l.Type {
-		case models.LinkMusic:
-			sl := models.Platform{}
-			err = json.Unmarshal(sub, &sl)
+		for _, s := range l.SubLinks {
+			//dbSub.ID, ID = models.GenerateUUIDPair()
+			sl, err := addSublink(link, "", s)
 			if err := e.CheckValid(err, sl, validator); err != nil {
 				return nil, err
 			}
 
-			data, err = json.Marshal(sl)
-		case models.LinkShows:
-			sl := models.Show{}
-			err = json.Unmarshal(sub, &sl)
-			if err := e.CheckValid(err, sl, validator); err != nil {
+			data, err := json.Marshal(sl)
+			if err != nil {
 				return nil, err
 			}
 
-			data, err = json.Marshal(sl)
+			dbSub := models.Sublink{Metadata: data}
+			dbSubs = append(dbSubs, dbSub)
 		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		subDB.Metadata = data
-		sublinks = append(sublinks, subDB)
-
 	}
 
-	return sublinks, nil
+	return link, nil
 }

@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type linkType string
@@ -21,6 +23,7 @@ const (
 // of sublinks associated with its type
 type Link struct {
 	ID        string        `json:"id"`
+	UUID      uuid.UUID     `json:"-"`
 	UserID    string        `json:"-"`
 	Type      linkType      `json:"type"`
 	Title     *string       `json:"title"`
@@ -41,7 +44,7 @@ type LinkPayload struct {
 
 // Sublink contains the metadata of a sublink
 type Sublink struct {
-	ID       string
+	ID       uuid.UUID
 	UserID   string
 	Metadata json.RawMessage
 }
@@ -72,4 +75,11 @@ type Platform struct {
 	ID   string `json:"id"`
 	Name string `json:"name" validate:"required"`
 	URL  string `json:"url" validate:"required"`
+}
+
+// GenerateUUIDPair returns a newly generated UUID (version 4) and its string version
+func GenerateUUIDPair() (uuid.UUID, string) {
+	v4 := uuid.New()
+
+	return v4, v4.String()
 }
