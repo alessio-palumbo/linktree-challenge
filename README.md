@@ -98,6 +98,7 @@
                 Venue: "Princess Theatre",
                 Location: "Melbourne",
                 Status: "on-sale",
+                URL: "https://www.ticketmaster.com.au/cats-the-musical-tickets/artist/843992",
             },
         },
     }
@@ -149,11 +150,13 @@ The Api assumes it can fetch the userID of the request from the authentication m
                         "type": "show",
                         "url": "https://myfirstlink.com/1",
                         "sublinks": [
-                            "id": "s001",
-                            "date": "Apr 01 2019",
-                            "venue": "Princess Theatre",
-                            "location": "Melbourne",
-                            "status": "sold-out"
+                            {
+                                "id": "s001",
+                                "date": "Apr 01 2019",
+                                "venue": "Princess Theatre",
+                                "location": "Melbourne",
+                                "status": "sold-out"
+                            }
                         ]
                     }
                 ]

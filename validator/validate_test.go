@@ -77,6 +77,16 @@ func TestCustomValidator_Validate(t *testing.T) {
 			wantErr:         true,
 			wantTranslation: "validation errors: Title is longer than 10 characters",
 		},
+		{
+			name: "Invalid Date",
+			payload: struct {
+				Date string `validate:"lkDate"`
+			}{
+				Date: "Apr 31 2020",
+			},
+			wantErr:         true,
+			wantTranslation: "validation errors: Date is invalid",
+		},
 	}
 
 	cv := &CustomValidator{

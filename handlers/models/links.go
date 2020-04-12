@@ -56,14 +56,15 @@ const (
 )
 
 // Show is a sublink containing information about a single show
+// TODO Date could be a more general format so that FE can use the local to display the date
 type Show struct {
-	ID       string
-	Date     string
-	Name     string
-	Venue    string
-	Location string
-	Status   showStatus
-	URL      string
+	ID       string     `json:"id"`
+	Date     string     `json:"date" validate:"required,lkDate"`
+	Name     string     `json:"name"`
+	Venue    string     `json:"venue" validate:"required_without=Location"`
+	Location string     `json:"location" validate:"required_without=Venue"`
+	Status   showStatus `json:"status" validate:"required,oneof=on-sale sold-out not-on-sale"`
+	URL      string     `json:"url" validate:"required"`
 }
 
 // Platform is a sublink representing a song's streaming platform and its url
