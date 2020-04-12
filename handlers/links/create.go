@@ -40,6 +40,7 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sublinks, err := subLinks(&l, h.Validator)
 		if err != nil {
 			e.WriteError(w, http.StatusBadRequest, err)
+			return
 		}
 
 		for _, s := range sublinks {

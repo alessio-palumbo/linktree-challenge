@@ -48,6 +48,51 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			wantBody:   `{"error":"validation errors: Title is longer than 144 characters"}`,
 		},
+		{
+			name:       "Music link with sublinks",
+			userID:     user1ID,
+			payload:    `{"type":"music","sublinks":[{"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
+			wantStatus: http.StatusOK,
+			wantBody: `{"id":"","type":"music","title":null,"url":null,"sublinks":[{"id":"",` +
+				`"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
+		},
+		{
+			name:   "Music link with show sublinks but with valid fields",
+			userID: user1ID,
+			payload: `{"type":"music","sublinks":[{"date":"Apr 01 2019","name":"Cats",` +
+				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
+				`"url":"https://cats.com.au"}]}`,
+			wantStatus: http.StatusOK,
+			wantBody: `{"id":"","type":"music","title":null,"url":null,"sublinks":[{` +
+				`"id":"","name":"Cats","url":"https://cats.com.au"}]}`,
+		},
+		{
+			name:       "Music link with missing required fields",
+			userID:     user1ID,
+			payload:    `{"type":"music","sublinks":[{"name":"Spotify"}]}`,
+			wantStatus: http.StatusBadRequest,
+			wantBody:   `{"error":"validation errors: URL is required"}`,
+		},
+		{
+			name:   "Show link with valid sublink fields",
+			userID: user1ID,
+			payload: `{"type":"shows","sublinks":[{"date":"Apr 01 2019","name":"Cats",` +
+				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
+				`"url":"https://cats.com.au"}]}`,
+			wantStatus: http.StatusOK,
+			wantBody: `{"id":"","type":"shows","title":null,"url":null,"sublinks":[{` +
+				`"id":"","date":"Apr 01 2019","name":"Cats","venue":"Princess Theatre",` +
+				`"location":"Melbourne","status":"sold-out","url":"https://cats.com.au"}]}`,
+		},
+		{
+			name:   "Show link with invalid sublink fields",
+			userID: user1ID,
+			payload: `{"type":"shows","sublinks":[{"date":"Apr 31 2019","name":"Cats",` +
+				`"status": "coming-soon","url":"https://cats.com.au"}]}`,
+			wantStatus: http.StatusBadRequest,
+			wantBody: `{"error":"validation errors: Date is invalid, Venue is required ` +
+				`in absence of Location, Location is required in absence of Venue, Status is invalid"}`,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -65,7 +110,7 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			}
 
 			if tc.wantBody != "" {
-				if got := recorder.Body.String(); got != tc.wantBody {
+				if got := strings.TrimSpace(recorder.Body.String()); got != tc.wantBody {
 					t.Errorf("got body %s, want %s", got, tc.wantBody)
 				}
 			}
