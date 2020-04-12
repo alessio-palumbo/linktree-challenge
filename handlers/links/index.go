@@ -12,6 +12,7 @@ import (
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 	"github.com/alessio-palumbo/linktree-challenge/handlers/models"
 	"github.com/alessio-palumbo/linktree-challenge/middleware"
+	"github.com/google/uuid"
 )
 
 const defaultOrder = "asc"
@@ -34,7 +35,7 @@ func (h IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		e.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	json.NewEncoder(w).Encode(links)
+	handlers.WriteResponse(w, http.StatusOK, links)
 }
 
 func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]models.Link, error) {
@@ -69,7 +70,7 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]mod
 	for rows.Next() {
 		var (
 			l        models.Link
-			subID    *string
+			subID    *uuid.UUID
 			metadata *json.RawMessage
 		)
 
@@ -79,8 +80,9 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]mod
 			return nil, err
 		}
 
-		if subID != nil {
-			err := addSublink(&l, subID, metadata)
+		// Sublinks must have metadata as it is a required field
+		if subID != nil && metadata != nil {
+			_, err := addSublink(&l, (*subID).String(), *metadata)
 			if err != nil {
 				return nil, err
 			}
@@ -112,31 +114,4 @@ func sortByClause(sortBy string) string {
 	}
 
 	return strings.Join(sortClauses, ", ")
-}
-
-func addSublink(l *models.Link, subID *string, metadata *json.RawMessage) error {
-
-	// TODO this could be improved to reduce code duplication using reflection
-	switch l.Type {
-	case models.LinkMusic:
-		sb := models.Platform{ID: *subID}
-		if metadata != nil {
-			err := json.Unmarshal(*metadata, &sb)
-			if err != nil {
-				return err
-			}
-		}
-		l.SubLinks = append(l.SubLinks, sb)
-	case models.LinkShows:
-		sb := models.Show{ID: *subID}
-		if metadata != nil {
-			err := json.Unmarshal(*metadata, &sb)
-			if err != nil {
-				return err
-			}
-		}
-		l.SubLinks = append(l.SubLinks, sb)
-	}
-
-	return nil
 }

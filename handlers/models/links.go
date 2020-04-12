@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type linkType string
@@ -20,19 +22,29 @@ const (
 // Link is the base model for a link that can contain a list
 // of sublinks associated with its type
 type Link struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"-"`
-	Type      linkType  `json:"type"`
-	Title     *string   `json:"title"`
-	URL       *string   `json:"url"`
-	Thumbnail *string   `json:"thumbnail,omitempty"`
-	CreatedAt time.Time `json:"-"`
-	SubLinks  []interface{}
+	ID        string        `json:"id"`
+	UUID      uuid.UUID     `json:"-"`
+	UserID    string        `json:"-"`
+	Type      linkType      `json:"type"`
+	Title     *string       `json:"title"`
+	URL       *string       `json:"url"`
+	Thumbnail *string       `json:"thumbnail,omitempty"`
+	CreatedAt time.Time     `json:"-"`
+	SubLinks  []interface{} `json:"sublinks,omitempty"`
+}
+
+// LinkPayload validates a request to create a new Link
+type LinkPayload struct {
+	Type      linkType          `json:"type" validate:"required,oneof=classic music shows"`
+	Title     *string           `json:"title" validate:"omitempty,max=144"`
+	URL       *string           `json:"url" validate:"omitempty,max=500"`
+	Thumbnail *string           `json:"thumbnail,omitempty" validate:"omitempty,max=144"`
+	SubLinks  []json.RawMessage `json:"sublinks,omitempty"`
 }
 
 // Sublink contains the metadata of a sublink
 type Sublink struct {
-	ID       string
+	ID       uuid.UUID
 	UserID   string
 	Metadata json.RawMessage
 }
@@ -47,18 +59,27 @@ const (
 )
 
 // Show is a sublink containing information about a single show
+// TODO Date could be a more general format so that FE can use the local to display the date
 type Show struct {
-	ID       string
-	Date     string
-	Name     string
-	Venue    string
-	Location string
-	Status   showStatus
+	ID       string     `json:"id"`
+	Date     string     `json:"date" validate:"required,lkDate"`
+	Name     string     `json:"name"`
+	Venue    string     `json:"venue" validate:"required_without=Location"`
+	Location string     `json:"location" validate:"required_without=Venue"`
+	Status   showStatus `json:"status" validate:"required,oneof=on-sale sold-out not-on-sale"`
+	URL      string     `json:"url" validate:"required"`
 }
 
 // Platform is a sublink representing a song's streaming platform and its url
 type Platform struct {
-	ID   string
-	Name string
-	URL  string
+	ID   string `json:"id"`
+	Name string `json:"name" validate:"required"`
+	URL  string `json:"url" validate:"required"`
+}
+
+// GenerateUUIDPair returns a newly generated UUID (version 4) and its string version
+func GenerateUUIDPair() (uuid.UUID, string) {
+	v4 := uuid.New()
+
+	return v4, v4.String()
 }

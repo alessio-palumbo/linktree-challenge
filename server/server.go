@@ -46,7 +46,7 @@ func New(g handlers.Group) http.Handler {
 
 	linksSB.Handle("", links.IndexHandler(g)).Methods("GET")
 	linksSB.Handle("/{link_id}", nil).Methods("GET")
-	linksSB.Handle("", nil).Methods("POST")
+	linksSB.Handle("", links.PostHandler(g)).Methods("POST")
 	linksSB.Handle("/{link_id}", nil).Methods("PUT")
 	linksSB.Handle("/{link_id}", nil).Methods("DELETE")
 

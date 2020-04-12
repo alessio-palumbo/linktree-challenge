@@ -36,14 +36,14 @@
     * title VARCHAR(144) default NULL
     * url VARCHAR(500) default NULL -- TODO could use shortened urls
     * thumbnail VARCHAR(144) default NULL -- assuming is shortened and stored in an s3 bucket
-    * created_at TIMESTAMPTZ DEFALT CURRENT_TIMESTAMP
+    * created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     * TODO if needed an update_at timestamp could be added
     * TODO for the sake of ordering we could have an order_id field
 
 * sublinks:
     * id UUID NOT NULL (PK)
     * link_id UUID NOT NULL (FK)
-    * metadata JSONB NULL
+    * metadata JSONB NOT NULL
 
 ### Models
 
@@ -98,6 +98,7 @@
                 Venue: "Princess Theatre",
                 Location: "Melbourne",
                 Status: "on-sale",
+                URL: "https://www.ticketmaster.com.au/cats-the-musical-tickets/artist/843992",
             },
         },
     }
@@ -149,11 +150,13 @@ The Api assumes it can fetch the userID of the request from the authentication m
                         "type": "show",
                         "url": "https://myfirstlink.com/1",
                         "sublinks": [
-                            "id": "s001",
-                            "date": "Apr 01 2019",
-                            "venue": "Princess Theatre",
-                            "location": "Melbourne",
-                            "status": "sold-out"
+                            {
+                                "id": "s001",
+                                "date": "Apr 01 2019",
+                                "venue": "Princess Theatre",
+                                "location": "Melbourne",
+                                "status": "sold-out"
+                            }
                         ]
                     }
                 ]

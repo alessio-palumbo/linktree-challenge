@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -14,6 +15,8 @@ const (
 	validationRequiredWithout = "is required in absence of"
 	validationMaxLength       = "is longer than"
 	validationMaxSize         = "is greater than"
+
+	lkDateFormat = "Jan 02 2006"
 )
 
 // CustomValidator is a custom payload validator
@@ -28,7 +31,7 @@ func New() *CustomValidator {
 
 // Validate applies the validation rules specified in the payload `validate tag` and returns an error
 func (cv *CustomValidator) Validate(i interface{}) error {
-	//cv.registerCustomValidations()
+	cv.registerCustomValidations()
 
 	err := cv.validator.Struct(i)
 	if err == nil {
@@ -44,7 +47,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 }
 
 func (cv *CustomValidator) registerCustomValidations() {
-	//cv.validator.RegisterValidation("name", function())
+	cv.validator.RegisterValidation("lkDate", validateLkDate)
 }
 
 func formatTranslation(vErr validator.FieldError) string {
@@ -74,4 +77,10 @@ func translate(field string, validationType string, params ...string) string {
 	}
 
 	return trans
+}
+
+// TODO this could be a more general date format
+func validateLkDate(fl validator.FieldLevel) bool {
+	_, err := time.Parse(lkDateFormat, fl.Field().String())
+	return err == nil
 }
