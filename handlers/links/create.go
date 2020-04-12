@@ -37,7 +37,7 @@ func (h PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		e.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	json.NewEncoder(w).Encode(*link)
+	handlers.WriteResponse(w, http.StatusCreated, *link)
 }
 
 func prepareDbObject(body []byte, validator *validator.CustomValidator) (*models.Link, []models.Sublink, error) {

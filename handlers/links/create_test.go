@@ -63,7 +63,7 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			name:       "Music link with sublinks",
 			userID:     user1ID,
 			payload:    `{"type":"music","sublinks":[{"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusCreated,
 			wantBody: `{"type":"music","title":null,"url":null,"sublinks":[{` +
 				`"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
 			dbTx: txSucceeded,
@@ -74,7 +74,7 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			payload: `{"type":"music","sublinks":[{"date":"Apr 01 2019","name":"Cats",` +
 				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
 				`"url":"https://cats.com.au"}]}`,
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusCreated,
 			wantBody: `{"type":"music","title":null,"url":null,"sublinks":[{` +
 				`"name":"Cats","url":"https://cats.com.au"}]}`,
 			dbTx: txSucceeded,
@@ -92,7 +92,7 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			payload: `{"type":"shows","sublinks":[{"date":"Apr 01 2019","name":"Cats",` +
 				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
 				`"url":"https://cats.com.au"}]}`,
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusCreated,
 			wantBody: `{"type":"shows","title":null,"url":null,"sublinks":[{` +
 				`"date":"Apr 01 2019","name":"Cats","venue":"Princess Theatre",` +
 				`"location":"Melbourne","status":"sold-out","url":"https://cats.com.au"}]}`,

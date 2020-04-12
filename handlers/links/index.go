@@ -35,7 +35,7 @@ func (h IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		e.WriteError(w, http.StatusInternalServerError, err)
 	}
 
-	json.NewEncoder(w).Encode(links)
+	handlers.WriteResponse(w, http.StatusOK, links)
 }
 
 func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]models.Link, error) {
