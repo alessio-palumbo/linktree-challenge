@@ -12,6 +12,7 @@ import (
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 	"github.com/alessio-palumbo/linktree-challenge/handlers/models"
 	"github.com/alessio-palumbo/linktree-challenge/middleware"
+	"github.com/google/uuid"
 )
 
 const defaultOrder = "asc"
@@ -69,7 +70,7 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]mod
 	for rows.Next() {
 		var (
 			l        models.Link
-			subID    *string
+			subID    *uuid.UUID
 			metadata *json.RawMessage
 		)
 
@@ -81,7 +82,7 @@ func getUserLinks(ctx context.Context, db *sql.DB, userID, sortBy string) ([]mod
 
 		// Sublinks must have metadata as it is a required field
 		if subID != nil && metadata != nil {
-			_, err := addSublink(&l, *subID, *metadata)
+			_, err := addSublink(&l, (*subID).String(), *metadata)
 			if err != nil {
 				return nil, err
 			}

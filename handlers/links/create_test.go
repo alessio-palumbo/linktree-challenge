@@ -10,15 +10,25 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/alessio-palumbo/linktree-challenge/handlers"
 	"github.com/alessio-palumbo/linktree-challenge/middleware"
+	"github.com/alessio-palumbo/linktree-challenge/test"
 	"github.com/alessio-palumbo/linktree-challenge/validator"
 )
 
 func TestPostHandler_ServeHTTP(t *testing.T) {
-	db, _, err := sqlmock.New()
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+
+	txSucceeded := func() {
+
+		mock.ExpectBegin()
+		mock.ExpectExec("INSERT INTO links").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec("INSERT INTO sublinks").WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+	}
 
 	var testCases = []struct {
 		name       string
@@ -26,6 +36,7 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 		payload    string
 		wantStatus int
 		wantBody   string
+		dbTx       func()
 	}{
 		{
 			name:       "Invalid payload, missing type",
@@ -53,8 +64,9 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			userID:     user1ID,
 			payload:    `{"type":"music","sublinks":[{"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
 			wantStatus: http.StatusOK,
-			wantBody: `{"id":"","type":"music","title":null,"url":null,"sublinks":[{"id":"",` +
+			wantBody: `{"type":"music","title":null,"url":null,"sublinks":[{` +
 				`"name":"Spotify","url":"http://music-link.com/all-of-me"}]}`,
+			dbTx: txSucceeded,
 		},
 		{
 			name:   "Music link with show sublinks but with valid fields",
@@ -63,8 +75,9 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
 				`"url":"https://cats.com.au"}]}`,
 			wantStatus: http.StatusOK,
-			wantBody: `{"id":"","type":"music","title":null,"url":null,"sublinks":[{` +
-				`"id":"","name":"Cats","url":"https://cats.com.au"}]}`,
+			wantBody: `{"type":"music","title":null,"url":null,"sublinks":[{` +
+				`"name":"Cats","url":"https://cats.com.au"}]}`,
+			dbTx: txSucceeded,
 		},
 		{
 			name:       "Music link with missing required fields",
@@ -80,9 +93,10 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 				`"venue":"Princess Theatre","location":"Melbourne","status": "sold-out",` +
 				`"url":"https://cats.com.au"}]}`,
 			wantStatus: http.StatusOK,
-			wantBody: `{"id":"","type":"shows","title":null,"url":null,"sublinks":[{` +
-				`"id":"","date":"Apr 01 2019","name":"Cats","venue":"Princess Theatre",` +
+			wantBody: `{"type":"shows","title":null,"url":null,"sublinks":[{` +
+				`"date":"Apr 01 2019","name":"Cats","venue":"Princess Theatre",` +
 				`"location":"Melbourne","status":"sold-out","url":"https://cats.com.au"}]}`,
+			dbTx: txSucceeded,
 		},
 		{
 			name:   "Show link with invalid sublink fields",
@@ -103,6 +117,10 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 
 			recorder := httptest.NewRecorder()
 
+			if tc.dbTx != nil {
+				tc.dbTx()
+			}
+
 			PostHandler(handlers.Group{DB: db, Validator: validator.New()}).ServeHTTP(recorder, req)
 
 			if got := recorder.Code; got != tc.wantStatus {
@@ -110,8 +128,9 @@ func TestPostHandler_ServeHTTP(t *testing.T) {
 			}
 
 			if tc.wantBody != "" {
-				if got := strings.TrimSpace(recorder.Body.String()); got != tc.wantBody {
-					t.Errorf("got body %s, want %s", got, tc.wantBody)
+				ignoreFields := []string{"id"}
+				if diff := test.CompareJSON(recorder.Body.String(), tc.wantBody, t, ignoreFields...); diff != "" {
+					t.Error(diff)
 				}
 			}
 		})
